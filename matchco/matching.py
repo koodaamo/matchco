@@ -1,0 +1,129 @@
+# encoding: utf-8
+
+from distance import jaccard, nlevenshtein, sorensen
+from jellyfish import damerau_levenshtein_distance as damerau
+from .algorithms import sift4
+
+
+def closestvariation(term, variations, method, blacklist=[], normalize=None):
+   "determine how close we get to a normalized term with a set of variations, at best"
+
+   assert type(term) == str, "term to find closest name variation for must be str"
+   assert variations, "need name variations to compare against, not just an empty list"
+
+   if normalize:
+      term = normalize(term)
+
+   method = method.lower().strip() # just in case
+
+   if method == "jaccard":
+      results = {v:jaccard(term, v) for v in variations}
+   elif method == "levenshtein":
+      results = {v:nlevenshtein(term, v) for v in variations}
+   elif method == "damerau":
+      results = {v:damerau(term, v)*1.0/ max(len(term),len(v))*1.0 for v in variations}
+   elif method == "sorensen":
+      results = {v:sorensen(term, v) for v in variations}
+   elif method == "sift":
+      results = {v:sift4(term, v)/ max(len(term),len(v)*1.0) for v in variations}
+   else:
+      raise Exception("unknown method: '%s'" % method)
+
+   # optionally remove non-acceptable (as top result) variation parts (tokens) such as
+   # overused ones commonly used in names; e.g. "purk" or "kuljetus", so that we don't
+   # get too many false positives or multiple equally good matches
+   for token in blacklist:
+      del results[token]
+
+   topcertainty = min(results.values())
+
+   # return best variation and its level of certainty
+   swapped = dict(zip(results.values(),results))
+   return (swapped[topcertainty], topcertainty)
+
+
+class NoMatchError(Exception):
+   "raised when matchco finds no match within threshold"
+
+   def __init__(self, msg, term, certainty, closest):
+      Exception.__init__(self, msg)
+      self.term = term
+      self.certainty = certainty
+      self.closest = closest
+
+
+class AmbiguousMatchError(Exception):
+   "raised when matchco gets multiple equally good matches"
+
+   def __init__(self, msg, term, certainty, matches):
+      Exception.__init__(self, msg)
+      self.term = term
+      self.certainty = certainty
+      self.matches = matches
+
+
+def bestmatch(txt, candidate_data, maxdiff=0.29, method="damerau", multiple=False, matchlen=True):
+   "return best matching candidate and the variation that produced the match"
+
+   assert type(txt) == str, "%s is not str, change it" % str(txt)
+   txt = txt.lower()
+
+   results = {}
+   for candidate, normalized, variations in candidate_data:
+      # store best match for each candidate, keyed by quality of match (certainty)
+      variation, certainty = closestvariation(txt, variations, method)
+      if certainty not in results:
+         results[certainty] = [(candidate, normalized, variation)]
+      else:
+         results[certainty].append((candidate, normalized, variation))
+
+   bestquality = min(results) # get best result of them all (results ~ results.keys())
+   _bestmatches = results[bestquality]  # (txt, cleaned, variation)
+   mc = len(_bestmatches) # matchcount
+
+   if bestquality <= maxdiff:
+
+      if mc == 1: # single match, ok
+         return _bestmatches[0]
+
+      elif multiple: # multiple equally good matches allowed, ok
+         return _bestmatches
+
+      elif mc > 1 and matchlen: # ambiguous match; try to reduce ambiguity
+
+         lengths = [len(m[1]) for m in _bestmatches] # normalized lengths
+         txtlen = len(txt)
+         closest_length = min(lengths, key=lambda x:abs(x-txtlen))
+         bestcount = lengths.count(closest_length)
+
+         # choose the matching alternative that is alone the closest to the length of the
+         # term, if and only if its lenghts does not differ (too much) from the length
+         # of the term
+         if bestcount == 1 and abs(closest_length-txtlen) <= 2:
+            for m in _bestmatches:
+               if len(m[1]) == closest_length:
+                  return m
+
+      # fall through to ambiguous failure
+      errstr = "%i matches for %s found with confidence %f: %s"
+      errdata = (mc, txt, bestquality, ", ".join((m[0] for m in _bestmatches)))
+      raise AmbiguousMatchError(errstr % errdata, txt, bestquality, _bestmatches)
+
+   # no match; do some more custom checking
+   else:
+      # if the length of term is at least 5 and half of the normalized low-quality match,
+      # and it is verbatim part of the match, we accept the match as a special case
+      specialcases = []
+      for match in _bestmatches:
+         nm = match[1]
+         nmlength = len(nm)
+         if txt in nm and nmlength >= 5 and nmlength >= (nmlength - nmlength/2):
+            specialcases.append(match)
+      if len(specialcases) == 1:
+         return specialcases[0]
+
+      # we give up; handle failure
+      errstr = "no good match found, closest (%f) to %s is/are: %s"
+      candidates = ', '.join((m[0] for m in _bestmatches))
+      errdata = (bestquality, txt, candidates)
+      raise NoMatchError(errstr % errdata, txt, bestquality, _bestmatches)
