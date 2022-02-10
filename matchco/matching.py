@@ -84,30 +84,31 @@ def bestmatch(txt, candidate_data, maxdiff=0.29, method="damerau", multiple=Fals
    if bestquality <= maxdiff:
 
       if mc == 1: # single match, ok
-         return _bestmatches[0]
+         match = _bestmatches if multiple else _bestmatches[0]
+         return (bestquality, match)
 
-      elif multiple: # multiple equally good matches allowed, ok
-         return _bestmatches
+      else:
+         if multiple: # multiple equally good matches allowed, ok
+            return (bestquality, _bestmatches)
+         if matchlen: # try to reduce ambiguity based on length matching
 
-      elif mc > 1 and matchlen: # ambiguous match; try to reduce ambiguity
+            lengths = [len(m[1]) for m in _bestmatches] # normalized lengths
+            txtlen = len(txt)
+            closest_length = min(lengths, key=lambda x:abs(x-txtlen))
+            bestcount = lengths.count(closest_length)
 
-         lengths = [len(m[1]) for m in _bestmatches] # normalized lengths
-         txtlen = len(txt)
-         closest_length = min(lengths, key=lambda x:abs(x-txtlen))
-         bestcount = lengths.count(closest_length)
+            # choose the matching alternative that is alone the closest to the length of the
+            # term, if and only if its lenghts does not differ (too much) from the length
+            # of the term
+            if bestcount == 1 and abs(closest_length-txtlen) <= 2:
+               for m in _bestmatches:
+                  if len(m[1]) == closest_length:
+                     return (bestquality, m)
 
-         # choose the matching alternative that is alone the closest to the length of the
-         # term, if and only if its lenghts does not differ (too much) from the length
-         # of the term
-         if bestcount == 1 and abs(closest_length-txtlen) <= 2:
-            for m in _bestmatches:
-               if len(m[1]) == closest_length:
-                  return m
-
-      # fall through to ambiguous failure
-      errstr = "%i matches for %s found with confidence %f: %s"
-      errdata = (mc, txt, bestquality, ", ".join((m[0] for m in _bestmatches)))
-      raise AmbiguousMatchError(errstr % errdata, txt, bestquality, _bestmatches)
+         # fall through to ambiguous failure
+         errstr = "%i matches for %s found with confidence %f: %s"
+         errdata = (mc, txt, bestquality, ", ".join((m[0] for m in _bestmatches)))
+         raise AmbiguousMatchError(errstr % errdata, txt, bestquality, _bestmatches)
 
    # no match; do some more custom checking
    else:
@@ -120,7 +121,7 @@ def bestmatch(txt, candidate_data, maxdiff=0.29, method="damerau", multiple=Fals
          if txt in nm and nmlength >= 5 and nmlength >= (nmlength - nmlength/2):
             specialcases.append(match)
       if len(specialcases) == 1:
-         return specialcases[0]
+         return (bestquality, specialcases[0])
 
       # we give up; handle failure
       errstr = "no good match found, closest (%f) to %s is/are: %s"
