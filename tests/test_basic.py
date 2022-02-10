@@ -69,7 +69,7 @@ def test_041_multiple_matches():
    ]
 
    result = [('SARATI OY', u'sarati', u'sarati'), ('SARATO OY', u'sarato', u'sarato')]
-   assert bestmatch(name, alts, multiple=True) == result
+   assert bestmatch(name, alts, multiple=True)[1] == result
 
 
 def test_042_multiple_nomatches():
@@ -91,7 +91,7 @@ def test_051_select_match_closestsize_found():
      ("YIT VESI", "yit vesi", ["yit", u'vesi']),
      ("YII OY", "yii", [u'yii']),
    ]
-   assert bestmatch(name, alts, multiple=False) == (u'YIT OY', u'yit', u'yit')
+   assert bestmatch(name, alts, multiple=False)[1] == (u'YIT OY', u'yit', u'yit')
 
 
 def test_052_select_match_closestsize_ambiguous():
@@ -111,4 +111,4 @@ def test_052_select_match_closestsize_ambiguous():
 @pytest.mark.parametrize("expected, inputs", testdata)
 def test_06_match(expected, inputs):
    for name in inputs:
-      assert bestmatch(name, candidatedata, method="damerau")[0] == expected
+      assert bestmatch(name, candidatedata, method="damerau")[1][0] == expected
