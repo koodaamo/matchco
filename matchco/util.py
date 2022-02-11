@@ -9,8 +9,10 @@ except ImportError:
 
 from cleanco import basename
 
-normlz_dashs = re.compile("\ *-\ *")
-normlz_dots = re.compile("\ *\.\ *")
+# expressions for removing whitespace around dashes or dots
+# see usage below in normalized()
+normlz_dashs = re.compile(r"\ *-\ *")
+normlz_dots = re.compile(r"\ *\.\ *")
 
 
 def normalized(name, umlauts=False):
@@ -26,7 +28,8 @@ def normalized(name, umlauts=False):
    if umlauts:
       name = name.replace(u'ä',u'a').replace(u'ö',u'o').replace(u'å',u'a')
 
-   # normalize dots and dashes
+   # remove extra whitespace around dots and dashes; they are separators
+   # already
    name = re.sub(normlz_dashs,'-', name)
    name = re.sub(normlz_dots,'.', name)
 
