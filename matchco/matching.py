@@ -82,19 +82,24 @@ def bestmatch(txt, candidate_data, maxdiff=0.29, method="damerau", multiple=Fals
          if multiple: # multiple equally good matches allowed, ok
             return (bestquality, _bestmatches)
          if matchlen: # try to reduce ambiguity based on length matching
-
             lengths = [len(m[1]) for m in _bestmatches] # normalized lengths
             txtlen = len(txt)
             closest_length = min(lengths, key=lambda x:abs(x-txtlen))
             bestcount = lengths.count(closest_length)
 
-            # choose the matching alternative that is alone the closest to the length of the
-            # term, if and only if its lenghts does not differ (too much) from the length
-            # of the term
-            if bestcount == 1 and abs(closest_length-txtlen) <= 2:
-               for m in _bestmatches:
-                  if len(m[1]) == closest_length:
-                     return (bestquality, m)
+            # If one of the matching alternatives is alone the closest to the length of the
+            # term, and its lenght does not differ (too much) from the length
+            # of the term, and the next closest differs clearly more, we choose it.
+            if bestcount == 1:
+               lengths.remove(closest_length)
+               second_closest_length = min(lengths, key=lambda x:abs(x-txtlen))
+
+               shortest_len_diff = abs(closest_length-txtlen)
+               second_shortest_len_diff = abs(second_closest_length-txtlen)
+               if shortest_len_diff <= 3 and (second_shortest_len_diff >= 2 * shortest_len_diff):
+                  for m in _bestmatches:
+                     if len(m[1]) == closest_length:
+                        return (bestquality, m)
 
          # fall through to ambiguous failure
          errstr = "%i matches for %s found with confidence %f: %s"
