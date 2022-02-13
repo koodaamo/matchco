@@ -22,4 +22,3 @@ def subsequences(txt, minlength=3):
 
    extras = filter(tokenfilter, chain.from_iterable((dashsplit + dashcombo + dotsplit)))
    return list(ws_separated.union(extras))
-
