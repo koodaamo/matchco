@@ -2,7 +2,7 @@
 import os
 import pytest
 
-from matchco import subsequences, closestvariation, bestmatch, normalized
+from matchco import subsequences, closestvariation, bestmatch
 from matchco import NoMatchError, AmbiguousMatchError
 from util import generate_test_data, candidate_data
 
@@ -25,8 +25,8 @@ def test_01_namevariations_return_strs():
 
 def test_02_namevariations_with_umlaut_end():
    name = "Ryhmä Rämä Oy"
-   alts = subsequences(name, normalize=normalized)
-   assert set(alts) == set(("rämä", "ryhmä rämä", "ryhmä"))
+   alts = subsequences(name)
+   assert set(alts) == set(('Ryhmä Rämä', 'Ryhmä', 'Rämä Oy', 'Rämä', 'Ryhmä Rämä Oy'))
 
 
 # test different methods
@@ -34,25 +34,25 @@ def test_02_namevariations_with_umlaut_end():
 def test_031_basic_jaccard():
    name = "Etelä-Suomen Rakennus- ja Purkutekniikka Oy"
    tested = "Rakennus- japurkuteknikka"
-   alts = subsequences(name, normalize=normalized)
+   alts = subsequences(name)
    assert closestvariation(tested, alts, "jaccard")[1] < 0.22
 
 def test_032_basic_levenshtein():
    name = "Etelä-Suomen Sähläys- ja Purkutekniikka Oy"
    tested = "Sähläys- japurkuteknikka"
-   alts = subsequences(name, normalize=normalized)
+   alts = subsequences(name)
    assert closestvariation(tested, alts, "levenshtein")[1] < 0.46
 
 def test_033_basic_damerau():
    name = "Etelä-Suomen Sähläys- ja Purkutekniikka Oy"
    tested = "Sähläys- japurkuteknikka"
-   alts = subsequences(name, normalize=normalized)
+   alts = subsequences(name)
    assert 0 < closestvariation(tested, alts, "damerau")[1] < 0.4
 
 def test_034_basic_sorensen():
    name = "Etelä-Suomen Rakennus- ja Purkutekniikka Oy"
    tested = "Rakennus- japurkuteknikka"
-   alts = subsequences(name, normalize=normalized)
+   alts = subsequences(name)
    assert closestvariation(tested, alts, "sorensen")[1] < 0.22
 
 

@@ -1,5 +1,5 @@
 import os, csv
-from matchco import normalized, subsequences
+from matchco import subsequences
 
 
 def generate_test_data(datafile):
@@ -16,4 +16,4 @@ def generate_test_data(datafile):
 
 def candidate_data(testdata):
    names = [tdi[0] for tdi in testdata]
-   return [(n, normalized(n), subsequences(n)+[normalized(n)]) for n in names]
+   return [(n, n, subsequences(n)+[n]) for n in names]

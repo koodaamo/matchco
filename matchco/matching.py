@@ -5,14 +5,11 @@ from jellyfish import damerau_levenshtein_distance as damerau
 from .algorithms import sift4
 
 
-def closestvariation(term, variations, method, blacklist=[], normalize=None):
+def closestvariation(term, variations, method):
    "determine how close we get to a normalized term with a set of variations, at best"
 
    assert type(term) == str, "term to find closest name variation for must be str"
    assert variations, "need name variations to compare against, not just an empty list"
-
-   if normalize:
-      term = normalize(term)
 
    method = method.lower().strip() # just in case
 
@@ -28,12 +25,6 @@ def closestvariation(term, variations, method, blacklist=[], normalize=None):
       results = {v:sift4(term, v)/ max(len(term),len(v)*1.0) for v in variations}
    else:
       raise Exception("unknown method: '%s'" % method)
-
-   # optionally remove non-acceptable (as top result) variation parts (tokens) such as
-   # overused ones commonly used in names; e.g. "purk" or "kuljetus", so that we don't
-   # get too many false positives or multiple equally good matches
-   for token in blacklist:
-      del results[token]
 
    topcertainty = min(results.values())
 

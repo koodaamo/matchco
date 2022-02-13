@@ -1,47 +1,8 @@
-# encoding: utf-8
-
-import re
 from itertools import combinations, chain
-try:
-    from future_builtins import filter
-except ImportError:
-    pass
-
-from cleanco import basename
-
-# expressions for removing whitespace around dashes or dots
-# see usage below in normalized()
-normlz_dashs = re.compile(r"\ *-\ *")
-normlz_dots = re.compile(r"\ *\.\ *")
 
 
-def normalized(name, umlauts=False):
-   "normalize the name"
-
-   # remove legal terms & extra whitespace & other trash
-   name = basename(name)
-
-   # lowercase
-   name = name.lower()
-
-   # optionally convert umlauts
-   if umlauts:
-      name = name.replace(u'ä',u'a').replace(u'ö',u'o').replace(u'å',u'a')
-
-   # remove extra whitespace around dots and dashes; they are separators
-   # already
-   name = re.sub(normlz_dashs,'-', name)
-   name = re.sub(normlz_dots,'.', name)
-
-   return name
-
-
-def subsequences(txt, minlength=3, normalize=None):
+def subsequences(txt, minlength=3):
    "generate all ordered multi-term (split by whitespace) text subsequences"
-
-   #assert type(txt) == unicode
-   if normalize:
-      txt = normalize(txt)
 
    # whitespace - separated parts
    parts = txt.split()

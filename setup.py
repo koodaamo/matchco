@@ -27,6 +27,6 @@ setup(name='matchco',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
-      install_requires=["cleanco>=2.2", "distance>=0.1.3", "jellyfish>=0.9.0"],
+      install_requires=["distance>=0.1.3", "jellyfish>=0.9.0"],
       tests_require=["pytest"],
 )
