@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import sys, os
 from pathlib import Path
 
-version = '1.2.4'
+version = '1.3'
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.txt").read_text()
