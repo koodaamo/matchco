@@ -1,8 +1,9 @@
 
-1.3 (2022)
+1.3 (2022-02-14)
 ------------------
 
 - remove normalization; it does not belong here
+- switch to ISO release date format
 
 1.2.4 (11.2. 2022)
 ------------------
