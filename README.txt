@@ -1,5 +1,9 @@
 Match organization names. See docs/ directory for more info.
 
+[![Python application](https://github.com/koodaamo/matchco/actions/workflows/python-app.yml/badge.svg)](https://github.com/koodaamo/matchco/actions/workflows/python-app.yml)
+
+```python3
+
 Basic usage:
 
     from matchco import subsequences, NoMatchError, bestmatch
@@ -12,3 +16,4 @@ Basic usage:
     except NoMatchError:
         match = None
     print(match or "no match for '%s' found" % name)
+```
