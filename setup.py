@@ -5,7 +5,7 @@ from pathlib import Path
 version = '1.3'
 
 this_directory = Path(__file__).parent
-long_description = (this_directory / "README.txt").read_text()
+long_description = (this_directory / "README.md").read_text()
 
 setup(name='matchco',
       version=version,
